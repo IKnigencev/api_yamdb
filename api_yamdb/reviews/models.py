@@ -1,5 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
+
+from django.db import models
 
 
 ROLE_CHOICES = (
@@ -141,3 +143,56 @@ class TitleGenre(models.Model):
 
     def __str__(self):
         return f'{self.genre} {self.title}'
+
+
+class CommonFieldS(models.Model):
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+    pub_date = models.DateTimeField(auto_now_add=True)
+    text = models.TextField('Текст')
+
+    class Meta:
+        abstract = True
+
+
+class Review(CommonFieldS):
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE,
+        verbose_name='Title'
+    )
+    score = models.PositiveSmallIntegerField(
+        validators=(MinValueValidator(1),
+                    MaxValueValidator(10)),
+        error_messages={'validators': 'The scores can be from 1 to 10'},
+        default=1
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_review'
+            )
+        ]
+        default_related_name = 'review'
+        verbose_name = 'review'
+
+    def __str__(self):
+        return self.text[0:30]
+
+
+class Comment(CommonFieldS):
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE,
+        verbose_name='Comment'
+    )
+
+    class Meta:
+        default_related_name = 'comment'
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
+
+    def __str__(self):
+        return self.text[0:30]

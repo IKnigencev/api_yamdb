@@ -7,7 +7,9 @@ from api.views import (
     SignUpViewSet,
     TitleViewSet,
     GenreViewSet,
-    CategoryViewSet
+    CategoryViewSet, 
+    ReviewViewSet,
+    CommentViewSet
 )
 
 
@@ -18,6 +20,14 @@ routes_v1.register('titles', TitleViewSet, basename='titles')
 routes_v1.register('categories', CategoryViewSet, basename='categories')
 routes_v1.register('genres', GenreViewSet, basename='genres')
 routes_v1.register('users', UserViewSet)
+routes_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews',
+    ReviewViewSet, basename='reviews'
+)
+routes_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet, basename='comments'
+)
 
 
 urlpatterns = [

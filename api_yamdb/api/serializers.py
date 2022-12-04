@@ -1,7 +1,12 @@
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 
-from reviews.models import User, Category, Genre, Title
+from reviews.models import User, Category, Genre, Title, Comment, Review
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -104,3 +109,37 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = Title
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True)
+    title = SlugRelatedField(slug_field='title', read_only=True)
+    score = serializers.IntegerField(
+        validators=(MinValueValidator(1),
+                    MaxValueValidator(10))
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+
+    def validate(self, data):
+        request = self.context['request']
+        title = get_object_or_404(
+            Title, pk=self.context.get('view').kwargs.get('title_id')
+        ),
+        author = request.user
+        if (request.method not in ('GET', "PATCH")
+           and Review.objects.filter(
+                title=title, author=author).exists()):
+            raise ValidationError('you already have a review')
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Comment
+        read_only_fields = ('review',)
