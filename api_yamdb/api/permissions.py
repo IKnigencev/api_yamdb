@@ -1,6 +1,14 @@
 from rest_framework import permissions
 
 
+class OnlyReadAndNotUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated and not request.user.is_user
+        )
+
+
 class AdminPermission(permissions.BasePermission):
     """
     Проверка, что запрос от лица администратора
@@ -14,34 +22,6 @@ class AdminPermission(permissions.BasePermission):
             or user.is_superuser
         )
 
-    def has_object_permission(self, request, view, obj):
-        user = request.user
-        return (
-            user.is_authenticated and user.is_admin
-            or user.is_superuser
-        )
-
-
-class UserPermission(permissions.BasePermission):
-    """
-    Проверка, что запрос от лица обычного юзера
-    или суперюзера.
-    """
-
-    def has_permission(self, request, view):
-        user = request.user
-        return (
-            user.is_authenticated and user.is_user
-            or user.is_superuser
-        )
-
-    def has_object_permission(self, request, view, obj):
-        user = request.user
-        return (
-            user.is_authenticated and user.is_user
-            or user.is_superuser
-        )
-
 
 class ModeratorPermission(permissions.BasePermission):
     """
@@ -52,13 +32,7 @@ class ModeratorPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return (
-            user.is_authenticated and user.is_moderator
-            or user.is_superuser
-        )
-
-    def has_object_permission(self, request, view, obj):
-        user = request.user
-        return (
-            user.is_authenticated and user.is_moderator
+            request.method in permissions.SAFE_METHODS
+            or user.is_authenticated and not user.is_moderator
             or user.is_superuser
         )
