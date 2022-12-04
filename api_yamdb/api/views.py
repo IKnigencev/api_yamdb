@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters, permissions
+from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.response import Response
@@ -7,11 +7,24 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 
-from api.serializers import *
-from reviews.models import *
+from api.serializers import (
+    UserSerializer,
+    TokenSerializer,
+    SignUpSerializer,
+    GenreSerializer,
+    TitleSerializer,
+    CategorySerializer,
+    TitleCreateSerializer
+)
+from reviews.models import User, Title, Category, Genre
+from api.permissions import (
+    AdminPermission,
+    ModeratorPermission,
+    OnlyReadAndNotUser
+)
 from api.filters import TitleFilter
-from api.permissions import *
 from api.utils import send_code_email
 
 
@@ -106,7 +119,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (AdminPermission, permissions.AllowAny,)
+    permission_classes = (ModeratorPermission, OnlyReadAndNotUser,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
@@ -122,7 +135,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (AdminPermission, permissions.AllowAny,)
+    permission_classes = (ModeratorPermission, OnlyReadAndNotUser,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -144,7 +157,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AdminPermission, permissions.AllowAny,)
+    permission_classes = (ModeratorPermission, OnlyReadAndNotUser,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
