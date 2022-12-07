@@ -160,7 +160,8 @@ class CommonFieldS(models.Model):
 class Review(CommonFieldS):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE,
-        verbose_name='Title'
+        verbose_name='Title',
+        related_name='reviews'
     )
     score = models.PositiveSmallIntegerField(
         validators=(MinValueValidator(1),
@@ -172,11 +173,11 @@ class Review(CommonFieldS):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'title'],
+                fields=['title', 'author'],
                 name='unique_author_review'
             )
         ]
-        default_related_name = 'review'
+        default_related_name = 'reviews'
         verbose_name = 'review'
 
     def __str__(self):
@@ -190,7 +191,7 @@ class Comment(CommonFieldS):
     )
 
     class Meta:
-        default_related_name = 'comment'
+        default_related_name = 'comments'
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'
 

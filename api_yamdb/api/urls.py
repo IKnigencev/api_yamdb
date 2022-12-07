@@ -16,8 +16,8 @@ from api.views import (
 app_name = 'api'
 
 routes_v1 = routers.DefaultRouter()
-routes_v1.register('titles', TitleViewSet, basename='titles')
 routes_v1.register('categories', CategoryViewSet, basename='categories')
+routes_v1.register('titles', TitleViewSet, basename='titles')
 routes_v1.register('genres', GenreViewSet, basename='genres')
 routes_v1.register('users', UserViewSet)
 routes_v1.register(

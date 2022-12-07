@@ -176,7 +176,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = ()
+    permission_classes = (ModeratorPermission, OnlyReadAndNotUser,)
 
     def get_queryset(self):
         title = get_object_or_404(
@@ -197,7 +197,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = ()
+    permission_classes = (ModeratorPermission, OnlyReadAndNotUser,)
 
     def get_queryset(self):
         review = get_object_or_404(

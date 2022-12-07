@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
@@ -97,6 +98,17 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = "__all__"
         model = Title
 
+    def get_rating(self, obj):
+        title = get_object_or_404(
+            Title,
+            id=self.kwargs.get('title_id')
+        )
+        rating = Review.objects.all().filter(
+            title=title).aggregate(Avg('score'))['score__avg']
+        if not rating:
+            return rating
+        return round(rating, 2)
+
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
@@ -113,7 +125,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
-    title = SlugRelatedField(slug_field='title', read_only=True)
     score = serializers.IntegerField(
         validators=(MinValueValidator(1),
                     MaxValueValidator(10))
@@ -127,11 +138,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         title = get_object_or_404(
             Title, pk=self.context.get('view').kwargs.get('title_id')
-        ),
+        )
         author = request.user
         if (request.method not in ('GET', "PATCH")
            and Review.objects.filter(
-                title=title, author=author).exists()):
+                author=author, title=title).exists()):
             raise ValidationError('you already have a review')
         return data
 
