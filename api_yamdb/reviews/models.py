@@ -145,23 +145,23 @@ class TitleGenre(models.Model):
         return f'{self.genre} {self.title}'
 
 
-class CommonFieldS(models.Model):
+class CommonFields(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE,
         verbose_name='Автор'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
-    text = models.TextField('Текст')
+    text = models.TextField()
 
     class Meta:
         abstract = True
 
 
-class Review(CommonFieldS):
+class Review(CommonFields):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE,
+        related_name='reviews',
         verbose_name='Title',
-        related_name='reviews'
     )
     score = models.PositiveSmallIntegerField(
         validators=(MinValueValidator(1),
@@ -184,10 +184,11 @@ class Review(CommonFieldS):
         return self.text[0:30]
 
 
-class Comment(CommonFieldS):
+class Comment(CommonFields):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE,
-        verbose_name='Comment'
+        verbose_name='Comment',
+        related_name='comments'
     )
 
     class Meta:

@@ -105,7 +105,6 @@ JWT_AUTH = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Internationalization
 
 LANGUAGE_CODE = 'en-us'
 
@@ -126,7 +125,6 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 
 AUTH_USER_MODEL = 'reviews.User'
-# Static files (CSS, JavaScript, Images)
 
 STATIC_URL = '/static/'
 
