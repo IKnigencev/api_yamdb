@@ -104,12 +104,31 @@ class SignUpViewSet(APIView):
 
         serializer = self.serializer_class(data=request.data)
 
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid():
+            if self.__refresh_token__(serializer):
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
             user = serializer.save()
             send_code_email(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def __refresh_token__(self, serializer) -> bool:
+        """Отправляет еще раз токен, если user уже его запрашивал.
+
+        Возварщает False, если такого user нет.
+        """
+        username = serializer.validated_data.get('username')
+        email = serializer.validated_data.get('email')
+
+        if User.objects.filter(
+                username=username,
+                email=email).exists():
+            user = get_object_or_404(User, username=username, email=email)
+            send_code_email(user)
+            return True
+        return False
 
 
 class TitleViewSet(viewsets.ModelViewSet):

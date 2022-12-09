@@ -10,8 +10,7 @@ class IsAuthorOrAdminOrModerator(permissions.BasePermission):
         return (request.method in permissions.SAFE_METHODS
                 or obj.author == request.user
                 or request.user.is_admin
-                or request.user.is_moderator
-                or request.user.is_superuser)
+                or request.user.is_moderator)
 
 
 class OnlyReadAndNotUser(permissions.BasePermission):
@@ -37,9 +36,9 @@ class AdminPermission(permissions.BasePermission):
 
 
 class ModeratorPermission(permissions.BasePermission):
-    """
-    Проверка, что запрос от лица модератора
-    или суперюзера.
+    """Ограничения для модератора.
+
+    Запрет для user с правами модератора.
     """
 
     def has_permission(self, request, view):

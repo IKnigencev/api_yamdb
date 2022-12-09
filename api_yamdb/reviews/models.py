@@ -4,21 +4,19 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
-ROLE_CHOICES = (
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-)
-
-
 class User(AbstractUser):
     """Кастомная модель юзера с ролями"""
+
+    ROLE_CHOICES = (
+        ('user', 'Пользователь'),
+        ('moderator', 'Модератор'),
+        ('admin', 'Администратор'),
+    )
 
     username = models.CharField(
         max_length=150,
         verbose_name='username',
-        unique=True,
-        null=True,
+        unique=True
     )
     mail = models.EmailField(
         max_length=255,
@@ -49,21 +47,16 @@ class User(AbstractUser):
     @property
     def is_user(self):
         """Проверка на роль обычного юзера"""
-        if self.role == 'user':
-            return True
-        return False
+        return self.role == 'user'
 
     @property
     def is_moderator(self):
         """Проверка на роль модератора"""
-        if self.role == 'moderator':
-            return True
-        return False
+        return self.role == 'moderator'
 
 
-class Genre(models.Model):
+class MixinNameSlug(models.Model):
     name = models.CharField(
-        verbose_name='Жанр',
         max_length=250,
         unique=True)
     slug = models.SlugField(
@@ -71,25 +64,20 @@ class Genre(models.Model):
         unique=True)
 
     class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class Genre(MixinNameSlug):
+    class Meta:
         verbose_name = 'Жанр'
 
-    def __str__(self):
-        return self.name
 
-
-class Category(models.Model):
-    name = models.CharField(
-        max_length=250,
-        verbose_name='Название')
-    slug = models.SlugField(
-        max_length=50,
-        unique=True)
-
+class Category(MixinNameSlug):
     class Meta:
         verbose_name = 'Категория'
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
@@ -145,19 +133,24 @@ class TitleGenre(models.Model):
         return f'{self.genre} {self.title}'
 
 
-class CommonFields(models.Model):
+class MixinFields(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE,
+        User,
+        on_delete=models.CASCADE,
         verbose_name='Автор'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
 
     class Meta:
+        ordering = ('-pub_date',)
         abstract = True
 
+    def __str__(self):
+        return self.text[0:30]
 
-class Review(CommonFields):
+
+class Review(MixinFields):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE,
         related_name='reviews',
@@ -166,7 +159,7 @@ class Review(CommonFields):
     score = models.PositiveSmallIntegerField(
         validators=(MinValueValidator(1),
                     MaxValueValidator(10)),
-        error_messages={'validators': 'The scores can be from 1 to 10'},
+        error_messages={'validators': 'Оценка может быть от 1 до 10'},
         default=1
     )
 
@@ -180,11 +173,8 @@ class Review(CommonFields):
         default_related_name = 'reviews'
         verbose_name = 'review'
 
-    def __str__(self):
-        return self.text[0:30]
 
-
-class Comment(CommonFields):
+class Comment(MixinFields):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE,
         verbose_name='Comment',
@@ -195,6 +185,3 @@ class Comment(CommonFields):
         default_related_name = 'comments'
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'
-
-    def __str__(self):
-        return self.text[0:30]

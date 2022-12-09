@@ -29,9 +29,12 @@ routes_v1.register(
     CommentViewSet, basename='comments'
 )
 
+path_auth_v1 = [
+    path('signup/', SignUpViewSet.as_view(), name='signup'),
+    path('token/', TokenViewSet.as_view(), name='token'),
+]
 
 urlpatterns = [
     path('v1/', include(routes_v1.urls)),
-    path('v1/auth/signup/', SignUpViewSet.as_view(), name='signup'),
-    path('v1/auth/token/', TokenViewSet.as_view(), name='token'),
+    path('v1/auth/', include(path_auth_v1))
 ]

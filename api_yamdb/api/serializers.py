@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -13,12 +15,14 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализация модели юзера"""
 
     username = serializers.CharField(
+        max_length=150,
         required=True,
         validators=(
             UniqueValidator(queryset=User.objects.all()),
         )
     )
     email = serializers.EmailField(
+        max_length=255,
         required=True,
         validators=(
             UniqueValidator(queryset=User.objects.all()),
@@ -36,31 +40,42 @@ class UserSerializer(serializers.ModelSerializer):
             'bio'
         )
 
+    def validate_username(self, value):
+        if value == 'me':
+            raise ValidationError('Username не может быть me')
+        return value
 
-class SignUpSerializer(serializers.ModelSerializer):
+
+class SignUpSerializer(serializers.Serializer):
     """Сериализация авторизации"""
 
-    email = serializers.EmailField()
-    username = serializers.CharField(max_length=100)
+    email = serializers.EmailField(
+        max_length=255,
+        required=True,
+        validators=(
+            UniqueValidator(queryset=User.objects.all()),
+        )
+    )
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=(
+            UniqueValidator(queryset=User.objects.all()),
+        )
+    )
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+    def create(self, validate_data):
+        return User.objects.create(**validate_data)
 
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
                 'Нельзя использовать username me')
-        elif User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                'Такой пользователь уже существует')
-        return value
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует')
-        return value
+        elif bool(re.search(r'^[\w.@+-]+\Z', value)):
+            return value
+        raise serializers.ValidationError(
+            'Такой пользователь уже существует'
+        )
 
 
 class TokenSerializer(serializers.ModelSerializer):
