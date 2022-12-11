@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.db import models
@@ -16,6 +17,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         verbose_name='username',
+        validators=(UnicodeUsernameValidator(),),
         unique=True
     )
     mail = models.EmailField(
@@ -40,9 +42,10 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         """Проверка на роль администратора"""
-        if self.role == 'admin':
-            return True
-        return False
+        return (
+            self.role == 'admin' or self.is_staff
+            or self.is_superuser
+        )
 
     @property
     def is_user(self):
@@ -164,12 +167,12 @@ class Review(MixinFields):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=['title', 'author'],
                 name='unique_author_review'
-            )
-        ]
+            ),
+        )
         default_related_name = 'reviews'
         verbose_name = 'review'
 

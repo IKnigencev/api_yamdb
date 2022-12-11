@@ -64,9 +64,6 @@ class SignUpSerializer(serializers.Serializer):
         )
     )
 
-    def create(self, validate_data):
-        return User.objects.create(**validate_data)
-
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
@@ -74,7 +71,7 @@ class SignUpSerializer(serializers.Serializer):
         elif bool(re.search(r'^[\w.@+-]+\Z', value)):
             return value
         raise serializers.ValidationError(
-            'Такой пользователь уже существует'
+            'Не верный формат username'
         )
 
 

@@ -31,7 +31,6 @@ class AdminPermission(permissions.BasePermission):
         user = request.user
         return (
             user.is_authenticated and user.is_admin
-            or user.is_superuser
         )
 
 
@@ -46,5 +45,4 @@ class ModeratorPermission(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or user.is_authenticated and not user.is_moderator
-            or user.is_superuser
         )

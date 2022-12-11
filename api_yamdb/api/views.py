@@ -54,16 +54,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 data=request.data,
                 partial=True
             )
-            if serializer.is_valid():
-                if user.is_user:
-                    serializer.save(role=user.role)
-                    return Response(serializer.data, status=status.HTTP_200_OK)
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         serializer = self.serializer_class(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -105,30 +98,13 @@ class SignUpViewSet(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            if self.__refresh_token__(serializer):
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-            user = serializer.save()
+            user, created = User.objects.get_or_create(
+                **serializer.validated_data,
+            )
             send_code_email(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def __refresh_token__(self, serializer) -> bool:
-        """Отправляет еще раз токен, если user уже его запрашивал.
-
-        Возварщает False, если такого user нет.
-        """
-        username = serializer.validated_data.get('username')
-        email = serializer.validated_data.get('email')
-
-        if User.objects.filter(
-                username=username,
-                email=email).exists():
-            user = get_object_or_404(User, username=username, email=email)
-            send_code_email(user)
-            return True
-        return False
 
 
 class TitleViewSet(viewsets.ModelViewSet):
