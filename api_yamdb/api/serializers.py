@@ -52,7 +52,7 @@ class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(
         max_length=255,
         required=True,
-	    validators=(
+        validators=(
             UniqueValidator(queryset=User.objects.all()),
         )
     )

@@ -101,8 +101,7 @@ class SignUpViewSet(APIView):
         if serializer.is_valid(raise_exception=True):
             try:
                 user, _ = User.objects.get_or_create(
-                    **serializer.validated_data
-                )
+                    **serializer.validated_data)
             except IntegrityError:
                 raise serializers.ValidationError()
             send_code_email(user)
