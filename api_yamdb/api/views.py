@@ -7,6 +7,8 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import serializers
+from django.db import IntegrityError
 
 from api.serializers import (
     UserSerializer,
@@ -96,11 +98,11 @@ class SignUpViewSet(APIView):
     def post(self, request):
 
         serializer = self.serializer_class(data=request.data)
-
-        if serializer.is_valid():
-            user, created = User.objects.get_or_create(
-                **serializer.validated_data,
-            )
+        if serializer.is_valid(raise_exception=True):
+            try:
+                user, _ = User.objects.get_or_create(**serializer.validated_data)
+            except IntegrityError:
+                raise serializers.ValidationError()
             send_code_email(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
